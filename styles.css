@@ -466,6 +466,19 @@ main {
   padding: 1.3rem;
 }
 
+.project-card img,
+.mini-card img,
+.edu-card img,
+.skill-card img,
+.contact-card img,
+.reference-card img {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
 .interactive-card,
 .logo-card,
 .stat-card {
