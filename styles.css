@@ -1031,12 +1031,13 @@ main {
 }
 
 .featured-card::before {
-  content: "";
+  content: "Featured";
   position: absolute;
   top: -1.2rem;
   right: 1.3rem;
-  width: 50px;
+  width: 72px;
   height: 32px;
+  color: var(--primary);
   background: linear-gradient(135deg, var(--accent), #ffcf66);
   border-radius: 8px;
   font-weight: 800;
