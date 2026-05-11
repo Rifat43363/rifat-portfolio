@@ -411,7 +411,8 @@ main {
 .projects-grid,
 .two-up,
 .contact-grid,
-.references-grid {
+.references-grid,
+.certification-grid {
   display: grid;
   gap: 1.2rem;
 }
@@ -431,6 +432,10 @@ main {
 .references-grid,
 .two-up {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.certification-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .skills-grid {
