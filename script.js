@@ -1,7 +1,3 @@
-window.addEventListener('error', () => {
-  document.querySelectorAll('.reveal:not(.is-visible)').forEach((item) => item.classList.add('is-visible'));
-});
-
 const header = document.querySelector('.site-header');
 const navToggle = document.querySelector('.nav-toggle');
 const navLinks = [...document.querySelectorAll('.nav a')];
@@ -43,20 +39,16 @@ navLinks.forEach((link) => {
   link.addEventListener('click', () => setMenuState(false));
 });
 
-if ('IntersectionObserver' in window) {
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        revealObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.14 });
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('is-visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.14 });
 
-  revealItems.forEach((item) => revealObserver.observe(item));
-} else {
-  revealItems.forEach((item) => item.classList.add('is-visible'));
-}
+revealItems.forEach((item) => revealObserver.observe(item));
 
 const activeObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
