@@ -1,94 +1,165 @@
-const header = document.querySelector('.site-header');
-const navToggle = document.querySelector('.nav-toggle');
-const navLinks = [...document.querySelectorAll('.nav a')];
-const sections = [...document.querySelectorAll('main section[id]')];
+const pageRoot = document.documentElement;
+const siteHeader = document.querySelector('.site-header');
+const navigationToggle = document.querySelector('.nav-toggle');
+const navigationLinks = [...document.querySelectorAll('.nav a')];
+const pageSections = [...document.querySelectorAll('main section[id]')];
 const revealItems = document.querySelectorAll('.reveal');
-const progressBar = document.querySelector('.scroll-progress');
-const backToTop = document.querySelector('.back-to-top');
-const filterButtons = document.querySelectorAll('.filter-chip');
-const filterTriggers = document.querySelectorAll('.filter-trigger, .tag-button');
+const scrollProgressBar = document.querySelector('.scroll-progress');
+const backToTopButton = document.querySelector('.back-to-top');
+const projectFilterButtons = document.querySelectorAll('.filter-chip');
+const projectFilterTriggers = document.querySelectorAll('.filter-trigger, .tag-button');
 const projectCards = document.querySelectorAll('.project-card');
 const copyButtons = document.querySelectorAll('.copy-button');
-const toast = document.querySelector('.toast');
+const toastMessage = document.querySelector('.toast');
+const themeToggleButton = document.querySelector('.theme-toggle');
+const themeToggleIcon = document.querySelector('.theme-toggle-icon');
+const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
-function setMenuState(isOpen) {
-  header.classList.toggle('menu-open', isOpen);
-  navToggle?.setAttribute('aria-expanded', String(isOpen));
+const colorThemeStorageKey = 'rifat-portfolio-theme';
+
+function readStoredTheme() {
+  try {
+    return localStorage.getItem(colorThemeStorageKey);
+  } catch (error) {
+    return null;
+  }
 }
 
-navToggle?.addEventListener('click', () => {
-  const next = !header.classList.contains('menu-open');
-  setMenuState(next);
+function writeStoredTheme(themeName) {
+  try {
+    localStorage.setItem(colorThemeStorageKey, themeName);
+  } catch (error) {
+    // Continue without persistence when storage is unavailable.
+  }
+}
+
+function getSystemTheme() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function getActiveTheme() {
+  return pageRoot.dataset.theme || getSystemTheme();
+}
+
+function applyColorTheme(themeName, persistTheme = false) {
+  const normalizedTheme = themeName === 'dark' ? 'dark' : 'light';
+  pageRoot.dataset.theme = normalizedTheme;
+
+  if (persistTheme) {
+    writeStoredTheme(normalizedTheme);
+  }
+
+  if (themeToggleButton) {
+    const nextTheme = normalizedTheme === 'dark' ? 'light' : 'dark';
+    themeToggleButton.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+    themeToggleButton.setAttribute('title', `Switch to ${nextTheme} mode`);
+  }
+
+  if (themeToggleIcon) {
+    themeToggleIcon.textContent = normalizedTheme === 'dark' ? '☀' : '☾';
+  }
+
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', normalizedTheme === 'dark' ? '#070b14' : '#0f172a');
+  }
+}
+
+const savedTheme = readStoredTheme();
+applyColorTheme(savedTheme || getSystemTheme());
+
+themeToggleButton?.addEventListener('click', () => {
+  const nextTheme = getActiveTheme() === 'dark' ? 'light' : 'dark';
+  applyColorTheme(nextTheme, true);
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+  if (!readStoredTheme()) {
+    applyColorTheme(event.matches ? 'dark' : 'light');
+  }
+});
+
+function setNavigationMenuState(isOpen) {
+  siteHeader?.classList.toggle('menu-open', isOpen);
+  navigationToggle?.setAttribute('aria-expanded', String(isOpen));
+}
+
+navigationToggle?.addEventListener('click', () => {
+  const nextState = !siteHeader?.classList.contains('menu-open');
+  setNavigationMenuState(nextState);
 });
 
 document.addEventListener('click', (event) => {
-  if (!header.classList.contains('menu-open')) return;
-  const clickedInsideHeader = header.contains(event.target);
-  if (!clickedInsideHeader) setMenuState(false);
+  if (!siteHeader?.classList.contains('menu-open')) return;
+  if (!siteHeader.contains(event.target)) setNavigationMenuState(false);
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') setMenuState(false);
+  if (event.key === 'Escape') setNavigationMenuState(false);
 });
 
 window.addEventListener('resize', () => {
-  if (window.innerWidth > 760) setMenuState(false);
+  if (window.innerWidth > 920) setNavigationMenuState(false);
 });
 
-navLinks.forEach((link) => {
-  link.addEventListener('click', () => setMenuState(false));
+navigationLinks.forEach((link) => {
+  link.addEventListener('click', () => setNavigationMenuState(false));
 });
 
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('is-visible');
-      revealObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.14 });
-
-revealItems.forEach((item) => revealObserver.observe(item));
-
-const activeObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (!entry.isIntersecting) return;
-    const id = entry.target.getAttribute('id');
-    navLinks.forEach((link) => {
-      link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+if ('IntersectionObserver' in window) {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        revealObserver.unobserve(entry.target);
+      }
     });
+  }, { threshold: 0.12 });
+
+  revealItems.forEach((item) => revealObserver.observe(item));
+
+  const activeNavigationObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const sectionId = entry.target.getAttribute('id');
+      navigationLinks.forEach((link) => {
+        link.classList.toggle('active', link.getAttribute('href') === `#${sectionId}`);
+      });
+    });
+  }, {
+    rootMargin: '-35% 0px -50% 0px',
+    threshold: 0.01
   });
-}, {
-  rootMargin: '-35% 0px -50% 0px',
-  threshold: 0.01
-});
 
-sections.forEach((section) => activeObserver.observe(section));
-
-function updateProgressBar() {
-  const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-  if (progressBar) progressBar.style.width = `${progress}%`;
-  if (backToTop) backToTop.classList.toggle('is-visible', scrollTop > 450);
+  pageSections.forEach((section) => activeNavigationObserver.observe(section));
+} else {
+  revealItems.forEach((item) => item.classList.add('is-visible'));
 }
 
-window.addEventListener('scroll', updateProgressBar, { passive: true });
-updateProgressBar();
+function updateScrollIndicators() {
+  const scrollTop = window.scrollY;
+  const documentScrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const scrollPercentage = documentScrollableHeight > 0 ? (scrollTop / documentScrollableHeight) * 100 : 0;
 
-backToTop?.addEventListener('click', () => {
+  if (scrollProgressBar) scrollProgressBar.style.width = `${scrollPercentage}%`;
+  if (backToTopButton) backToTopButton.classList.toggle('is-visible', scrollTop > 450);
+}
+
+window.addEventListener('scroll', updateScrollIndicators, { passive: true });
+updateScrollIndicators();
+
+backToTopButton?.addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
 function showToast(message) {
-  if (!toast) return;
-  toast.textContent = message;
-  toast.classList.add('show');
-  clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
+  if (!toastMessage) return;
+  toastMessage.textContent = message;
+  toastMessage.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toastMessage.classList.remove('show'), 1800);
 }
 
-async function copyText(value) {
+async function copyTextToClipboard(value) {
   if (!value) {
     showToast('Nothing to copy');
     return;
@@ -100,70 +171,70 @@ async function copyText(value) {
       showToast('Copied to clipboard');
       return;
     } catch (error) {
-      // Fallback to legacy copy method below.
+      // Continue to the fallback method below.
     }
   }
 
-  const fallback = document.createElement('textarea');
-  fallback.value = value;
-  fallback.setAttribute('readonly', '');
-  fallback.style.position = 'fixed';
-  fallback.style.opacity = '0';
-  document.body.appendChild(fallback);
-  fallback.select();
+  const fallbackTextArea = document.createElement('textarea');
+  fallbackTextArea.value = value;
+  fallbackTextArea.setAttribute('readonly', '');
+  fallbackTextArea.style.position = 'fixed';
+  fallbackTextArea.style.opacity = '0';
+  document.body.appendChild(fallbackTextArea);
+  fallbackTextArea.select();
 
-  if (document.queryCommandSupported?.('copy')) {
-    document.execCommand('copy');
-    showToast('Copied to clipboard');
-  } else {
+  try {
+    const copySucceeded = document.execCommand('copy');
+    showToast(copySucceeded ? 'Copied to clipboard' : 'Unable to copy');
+  } catch (error) {
     showToast('Unable to copy');
   }
 
-  fallback.remove();
+  fallbackTextArea.remove();
 }
 
 copyButtons.forEach((button) => {
-  button.addEventListener('click', () => copyText(button.dataset.copy || ''));
+  button.addEventListener('click', () => copyTextToClipboard(button.dataset.copy || ''));
 });
 
-function activateFilter(filter) {
-  filterButtons.forEach((button) => {
-    button.classList.toggle('is-active', button.dataset.filter === filter);
+function activateProjectFilter(filterName) {
+  projectFilterButtons.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.filter === filterName);
   });
 
   projectCards.forEach((card) => {
     const categories = (card.dataset.category || '').split(/\s+/).filter(Boolean);
-    const isMatch = filter === 'all' || categories.includes(filter);
+    const isMatch = filterName === 'all' || categories.includes(filterName);
     card.hidden = !isMatch;
   });
 
   const projectsSection = document.querySelector('#projects');
-  if (projectsSection && filter !== 'all') {
+  if (projectsSection && filterName !== 'all') {
     projectsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
-filterButtons.forEach((button) => {
-  button.addEventListener('click', () => activateFilter(button.dataset.filter || 'all'));
+projectFilterButtons.forEach((button) => {
+  button.addEventListener('click', () => activateProjectFilter(button.dataset.filter || 'all'));
 });
 
-filterTriggers.forEach((button) => {
+projectFilterTriggers.forEach((button) => {
   button.addEventListener('click', () => {
-    const filter = button.dataset.filter || 'all';
-    activateFilter(filter);
+    activateProjectFilter(button.dataset.filter || 'all');
   });
 });
 
-function targetPulseFromHash(hashValue) {
+function pulseTargetFromHash(hashValue) {
   if (!hashValue) return;
-  const target = document.querySelector(hashValue);
-  if (!target) return;
-  target.classList.add('is-targeted');
-  clearTimeout(targetPulseFromHash._timer);
-  targetPulseFromHash._timer = setTimeout(() => {
-    target.classList.remove('is-targeted');
+  const targetElement = document.querySelector(hashValue);
+  if (!targetElement) return;
+
+  targetElement.classList.add('is-targeted');
+  clearTimeout(pulseTargetFromHash.timer);
+  pulseTargetFromHash.timer = setTimeout(() => {
+    targetElement.classList.remove('is-targeted');
   }, 1400);
 }
 
-window.addEventListener('hashchange', () => targetPulseFromHash(window.location.hash));
-if (window.location.hash) targetPulseFromHash(window.location.hash);
+window.addEventListener('hashchange', () => pulseTargetFromHash(window.location.hash));
+if (window.location.hash) pulseTargetFromHash(window.location.hash);
