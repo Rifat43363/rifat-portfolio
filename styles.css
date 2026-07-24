@@ -75,6 +75,35 @@ html[data-theme="dark"] {
   box-sizing: border-box;
 }
 
+::selection {
+  background: var(--brand-accent);
+  color: var(--brand-ink-strong);
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--page-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--brand-blue) 45%, var(--border-strong));
+  border-radius: 999px;
+  border: 3px solid var(--page-background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-blue);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--brand-blue) 45%, var(--border-strong)) var(--page-background);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -119,6 +148,28 @@ main {
 .section {
   padding: 5.5rem 0;
   scroll-margin-top: calc(var(--navigation-height) + 16px);
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -60px;
+  z-index: 1300;
+  background: var(--brand-ink);
+  color: var(--page-background-secondary);
+  padding: 0.75rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 3px;
 }
 
 .scroll-progress {
@@ -269,7 +320,7 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
   gap: 2rem;
-  align-items: stretch;
+  align-items: center;
 }
 
 .eyebrow {
@@ -473,7 +524,6 @@ main {
   border-color: color-mix(in srgb, var(--brand-accent) 80%, transparent);
   background: var(--brand-accent-soft);
   box-shadow: 0 10px 24px color-mix(in srgb, var(--brand-accent) 18%, transparent);
-  outline: none;
 }
 
 .stats-grid,
@@ -483,10 +533,19 @@ main {
 .projects-grid,
 .contact-grid,
 .references-grid,
-.certification-grid,
 .activities-grid {
   display: grid;
   gap: 1.2rem;
+}
+
+.certification-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.certification-grid .mini-card {
+  flex: 1 1 240px;
 }
 
 .stats-grid {
@@ -505,8 +564,11 @@ main {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.project-card.span-full {
+  grid-column: 1 / -1;
+}
+
 .references-grid,
-.certification-grid,
 .activities-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -598,10 +660,16 @@ main {
 
 .portrait {
   width: 100%;
+  height: auto;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   object-position: center top;
   border-radius: 18px;
+  transition: transform 0.4s ease;
+}
+
+.portrait-frame:hover .portrait {
+  transform: scale(1.04);
 }
 
 .panel-name {
@@ -887,6 +955,11 @@ main {
   object-position: center center;
   background: #ffffff;
   padding: 0.75rem 0.75rem 0;
+  transition: transform 0.4s ease;
+}
+
+.activity-card:hover img {
+  transform: scale(1.05);
 }
 
 .activity-body {
@@ -948,7 +1021,6 @@ main {
 .contact-link:focus-visible {
   color: var(--brand-blue);
   border-color: currentColor;
-  outline: none;
 }
 
 .contact-note {
@@ -1077,10 +1149,7 @@ main {
     gap: 0.8rem;
   }
 
-  .overview-grid,
-  .references-grid,
-  .certification-grid,
-  .activities-grid {
+  .overview-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1171,9 +1240,12 @@ main {
   .projects-grid,
   .contact-grid,
   .references-grid,
-  .certification-grid,
   .activities-grid {
     grid-template-columns: 1fr;
+  }
+
+  .certification-grid .mini-card {
+    flex-basis: 100%;
   }
 
   .timeline-card {
@@ -1247,14 +1319,60 @@ main {
 
 .activity-graphic-charity {
   padding: 1rem;
-  font-size: clamp(1.7rem, 4vw, 3rem);
+  font-size: clamp(2.6rem, 4vw, 4.2rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
   text-align: center;
 }
 
-.activity-graphic-charity {
-  font-size: clamp(2.6rem, 4vw, 4.2rem);
-  text-align: center;
-  line-height: 1.05;
+@media print {
+  .scroll-progress,
+  .site-header,
+  .back-to-top,
+  .toast,
+  .skip-link,
+  .quick-links,
+  .cta-row,
+  .filter-bar,
+  .copy-button,
+  .site-footer {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  a {
+    color: #000000;
+    text-decoration: underline;
+  }
+
+  .section {
+    padding: 1rem 0;
+    break-inside: avoid;
+  }
+
+  .profile-panel,
+  .overview-card,
+  .mini-card,
+  .timeline-card,
+  .edu-card,
+  .skill-card,
+  .project-card,
+  .activity-card,
+  .achievement-card,
+  .contact-card,
+  .reference-card,
+  .stat-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

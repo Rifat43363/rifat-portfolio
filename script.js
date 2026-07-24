@@ -1,3 +1,6 @@
+const currentYearLabel = document.getElementById('current-year');
+if (currentYearLabel) currentYearLabel.textContent = new Date().getFullYear();
+
 const pageRoot = document.documentElement;
 const siteHeader = document.querySelector('.site-header');
 const navigationToggle = document.querySelector('.nav-toggle');
@@ -197,6 +200,14 @@ copyButtons.forEach((button) => {
   button.addEventListener('click', () => copyTextToClipboard(button.dataset.copy || ''));
 });
 
+function updateProjectGridSpan() {
+  const visibleCards = [...projectCards].filter((card) => !card.hidden);
+  projectCards.forEach((card) => card.classList.remove('span-full'));
+  if (visibleCards.length % 2 !== 0) {
+    visibleCards[visibleCards.length - 1].classList.add('span-full');
+  }
+}
+
 function activateProjectFilter(filterName) {
   projectFilterButtons.forEach((button) => {
     button.classList.toggle('is-active', button.dataset.filter === filterName);
@@ -208,11 +219,15 @@ function activateProjectFilter(filterName) {
     card.hidden = !isMatch;
   });
 
+  updateProjectGridSpan();
+
   const projectsSection = document.querySelector('#projects');
   if (projectsSection && filterName !== 'all') {
     projectsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
+
+updateProjectGridSpan();
 
 projectFilterButtons.forEach((button) => {
   button.addEventListener('click', () => activateProjectFilter(button.dataset.filter || 'all'));
