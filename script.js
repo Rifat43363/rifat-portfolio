@@ -253,3 +253,159 @@ function pulseTargetFromHash(hashValue) {
 
 window.addEventListener('hashchange', () => pulseTargetFromHash(window.location.hash));
 if (window.location.hash) pulseTargetFromHash(window.location.hash);
+
+/* ============================================================
+   Premium interaction layer (progressive enhancement).
+   Pointer-driven effects run only on a fine pointer with motion
+   allowed; everything degrades to the static, accessible base.
+   ============================================================ */
+(function premiumInteractions() {
+  const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointerQuery = window.matchMedia('(pointer: fine)');
+
+  const motionAllowed = () => !reduceMotionQuery.matches;
+  const canHover = () => finePointerQuery.matches && motionAllowed();
+
+  /* Staggered reveals: delay each item by its position within its group. */
+  (function staggerReveals() {
+    const groupCounts = new Map();
+    document.querySelectorAll('.reveal').forEach((element) => {
+      const parent = element.parentElement;
+      const index = groupCounts.get(parent) || 0;
+      groupCounts.set(parent, index + 1);
+      element.style.setProperty('--reveal-delay', Math.min(index * 70, 350));
+    });
+  })();
+
+  /* Count-up animation for the hero stat numbers. */
+  (function statCountUp() {
+    const numbers = document.querySelectorAll('.stat-card strong');
+    if (!numbers.length) return;
+
+    const runCountUp = (element) => {
+      const originalText = element.textContent.trim();
+      const target = parseInt(originalText, 10);
+      if (Number.isNaN(target)) return;
+
+      if (!motionAllowed()) {
+        element.textContent = originalText;
+        return;
+      }
+
+      const duration = 1000;
+      const startTime = performance.now();
+      const tick = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = String(Math.round(target * eased));
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          element.textContent = originalText;
+        }
+      };
+      requestAnimationFrame(tick);
+    };
+
+    if (!('IntersectionObserver' in window)) {
+      numbers.forEach(runCountUp);
+      return;
+    }
+
+    const countObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        runCountUp(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.6 });
+
+    numbers.forEach((number) => countObserver.observe(number));
+  })();
+
+  /* 3D tilt + cursor spotlight on cards. */
+  (function cardTilt() {
+    if (!canHover()) return;
+    const cards = document.querySelectorAll('.interactive-card, .logo-card, .stat-card');
+    const maxTilt = 6;
+
+    cards.forEach((card) => {
+      let animationFrame = 0;
+
+      const handleMove = (event) => {
+        const rect = card.getBoundingClientRect();
+        const relativeX = (event.clientX - rect.left) / rect.width;
+        const relativeY = (event.clientY - rect.top) / rect.height;
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = requestAnimationFrame(() => {
+          card.style.setProperty('--ry', `${(relativeX - 0.5) * 2 * maxTilt}deg`);
+          card.style.setProperty('--rx', `${(0.5 - relativeY) * 2 * maxTilt}deg`);
+          card.style.setProperty('--mx', `${relativeX * 100}%`);
+          card.style.setProperty('--my', `${relativeY * 100}%`);
+        });
+      };
+
+      const reset = () => {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        card.classList.remove('is-tilting');
+        card.style.setProperty('--rx', '0deg');
+        card.style.setProperty('--ry', '0deg');
+        card.style.setProperty('--mx', '50%');
+        card.style.setProperty('--my', '50%');
+      };
+
+      card.addEventListener('pointerenter', () => card.classList.add('is-tilting'));
+      card.addEventListener('pointermove', handleMove);
+      card.addEventListener('pointerleave', reset);
+    });
+  })();
+
+  /* Magnetic pull on primary call-to-action buttons. */
+  (function magneticButtons() {
+    if (!canHover()) return;
+    const magnets = document.querySelectorAll('.button-primary, .back-to-top');
+    const strength = 0.28;
+    const maxShift = 8;
+
+    magnets.forEach((element) => {
+      let animationFrame = 0;
+
+      const handleMove = (event) => {
+        const rect = element.getBoundingClientRect();
+        const offsetX = event.clientX - (rect.left + rect.width / 2);
+        const offsetY = event.clientY - (rect.top + rect.height / 2);
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = requestAnimationFrame(() => {
+          const translateX = Math.max(Math.min(offsetX * strength, maxShift), -maxShift);
+          const translateY = Math.max(Math.min(offsetY * strength, maxShift), -maxShift);
+          element.style.transform = `translate(${translateX}px, ${translateY}px)`;
+        });
+      };
+
+      const reset = () => {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        element.style.transform = '';
+      };
+
+      element.addEventListener('pointermove', handleMove);
+      element.addEventListener('pointerleave', reset);
+    });
+  })();
+
+  /* Hero-wide cursor spotlight follows the pointer. */
+  (function heroSpotlight() {
+    if (!canHover()) return;
+    const hero = document.querySelector('.hero');
+    if (!hero) return;
+    let animationFrame = 0;
+
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(() => {
+        hero.style.setProperty('--hero-mx', `${((event.clientX - rect.left) / rect.width) * 100}%`);
+        hero.style.setProperty('--hero-my', `${((event.clientY - rect.top) / rect.height) * 100}%`);
+      });
+    });
+  })();
+})();

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rifat43363.github.io/sitemap.xml
+Sitemap: https://rifat43363.github.io/rifat-portfolio/sitemap.xml
