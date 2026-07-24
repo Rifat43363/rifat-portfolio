@@ -1645,7 +1645,16 @@ main { counter-reset: section; }
 
 @media (max-width: 760px) {
   .section {
-    padding: 4.5rem 0;
+    padding: 3.6rem 0;
+  }
+
+  /* Trim the divider gap so sections don't feel far apart on a phone */
+  main > .section + .section::before {
+    margin-bottom: 2.4rem;
+  }
+
+  .section-head {
+    margin-bottom: 1.5rem;
   }
 
   .overview-grid,
@@ -1698,17 +1707,10 @@ main { counter-reset: section; }
     min-height: 84px;
   }
 
-  .button,
-  .chip-link,
-  .inline-link,
-  .filter-chip,
-  .tag-button {
+  /* Stack the primary call-to-action buttons full-width, but let chips, tags,
+     filters, and inline links keep flowing as compact wrapping pills. */
+  .cta-row .button {
     width: 100%;
-    justify-content: center;
-  }
-
-  .copy-button {
-    width: auto;
   }
 
   .card-topline {
